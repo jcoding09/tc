@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enhanced Date & Time Converter</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      max-width: 500px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+    input, select, button {
+      padding: 10px;
+      font-size: 16px;
+      margin-bottom: 20px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      width: 100%;
+    }
+    button {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .copy-btn {
+      background-color: #007bff;
+      margin-top: 10px;
+    }
+    .copy-btn:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Enhanced Date & Time Converter</h1>
+    <input type="date" id="dateInput" placeholder="Select a date">
+    <input type="time" id="timeInput" placeholder="Select time (optional)">
+    
+    <label for="formatSelect">Choose Date Format:</label>
+    <select id="formatSelect">
+      <option value="dd/mmm/yyyy">DD/MMM/YYYY</option>
+      <option value="mm/dd/yyyy">MM/DD/YYYY</option>
+      <option value="yyyy/mm/dd">YYYY/MM/DD</option>
+    </select>
+    
+    <button onclick="convertDate()">Convert Date & Time</button>
+    
+    <div id="result"></div>
+    <button class="copy-btn" onclick="copyToClipboard()">Copy to Clipboard</button>
+  </div>
+
+  <script>
+    function convertDate() {
+      const dateInput = document.getElementById('dateInput').value;
+      const timeInput = document.getElementById('timeInput').value;
+      const format = document.getElementById('formatSelect').value;
+      
+      if (!dateInput) {
+        alert("Please select a date.");
+        return;
+      }
+
+      // Locale-specific month names
+      const dateObj = new Date(dateInput);
+      const day = ("0" + dateObj.getDate()).slice(-2);
+      const monthShort = dateObj.toLocaleString('default', { month: 'short' }).toUpperCase(); // e.g., "JAN"
+      const monthNumeric = ("0" + (dateObj.getMonth() + 1)).slice(-2); // e.g., "01" for January
+      const year = dateObj.getFullYear();
+
+      // Time Formatting (optional)
+      let formattedTime = '';
+      if (timeInput) {
+        const timeObj = new Date(`1970-01-01T${timeInput}:00`);
+        const hours = ("0" + timeObj.getHours()).slice(-2);
+        const minutes = ("0" + timeObj.getMinutes()).slice(-2);
+        formattedTime = ` ${hours}:${minutes}`;
+      }
+
+      // Date format logic
+      let formattedDate;
+      if (format === "dd/mmm/yyyy") {
+        formattedDate = `${day}/${monthShort}/${year}`;
+      } else if (format === "mm/dd/yyyy") {
+        formattedDate = `${monthNumeric}/${day}/${year}`;
+      } else if (format === "yyyy/mm/dd") {
+        formattedDate = `${year}/${monthNumeric}/${day}`;
+      }
+
+      // Display result
+      document.getElementById('result').innerText = formattedDate + formattedTime;
+    }
+
+    function copyToClipboard() {
+      const resultText = document.getElementById('result').innerText;
+      if (resultText) {
+        navigator.clipboard.writeText(resultText).then(() => {
+          alert("Copied to clipboard: " + resultText);
+        });
+      } else {
+        alert("No result to copy.");
+      }
+    }
+  </script>
+</body>
+</html>
