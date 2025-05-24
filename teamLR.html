@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dream11 Team Generator</title>
+  <!-- FIXED: Use legacy jsPDF bundle for browser compatibility -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      background-color: #f4f4f4;
+    }
+    h2 { color: #333; }
+    label { display: block; margin-top: 10px; }
+    input, button {
+      padding: 8px;
+      margin-top: 5px;
+      width: 300px;
+      max-width: 100%;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    button:hover { background-color: #0056b3; }
+    .team-output {
+      margin-top: 20px;
+      padding: 15px;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .team {
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed #aaa;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Dream11 Team Generator</h2>
+
+<label for="range">Captain vs Vice-Captain Range (e.g., L5*R5):</label>
+<input type="text" id="range" placeholder="L5*R5">
+
+<label for="count">Number of Unique Teams:</label>
+<input type="number" id="count" value="5" min="1" max="100">
+
+<div style="margin-top: 15px;">
+  <button onclick="generateTeams()">Generate Teams</button>
+  <button onclick="downloadCSV()">Export as CSV</button>
+  <button onclick="downloadPDF()">Export as PDF</button>
+</div>
+
+<div class="team-output" id="output"></div>
+
+<script>
+  const allPlayers = [
+    'L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7', 'L8',
+    'R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8'
+  ];
+  let savedTeams = [];
+
+  function getPlayerRange(rangeStr) {
+    const match = rangeStr.match(/^([LR])(\d+)\*([LR])(\d+)$/);
+    if (!match) return null;
+    const [ , lType, lMax, rType, rMax ] = match;
+    const lRange = allPlayers.filter(p => p.startsWith(lType) && parseInt(p.slice(1)) <= parseInt(lMax));
+    const rRange = allPlayers.filter(p => p.startsWith(rType) && parseInt(p.slice(1)) <= parseInt(rMax));
+    return [lRange, rRange];
+  }
+
+  function generateTeams() {
+    const range = document.getElementById('range').value.trim();
+    const count = parseInt(document.getElementById('count').value);
+    const output = document.getElementById('output');
+    output.innerHTML = '';
+    savedTeams = [];
+
+    const ranges = getPlayerRange(range);
+    if (!ranges) {
+      output.innerHTML = '<p style="color:red">Invalid format. Use e.g., L5*R5.</p>';
+      return;
+    }
+
+    const [captains, viceCaptains] = ranges;
+    const teamSet = new Set();
+    const cvSet = new Set();
+
+    while (savedTeams.length < count && teamSet.size < 1000) {
+      const c = captains[Math.floor(Math.random() * captains.length)];
+      let vc = viceCaptains[Math.floor(Math.random() * viceCaptains.length)];
+      if (vc === c) continue;
+      const pairKey = [c, vc].sort().join("-");
+      if (cvSet.has(pairKey)) continue;
+
+      const remaining = allPlayers.filter(p => p !== c && p !== vc);
+      const team = [c, vc, ...remaining.sort(() => 0.5 - Math.random()).slice(0, 9)];
+      const teamKey = team.slice().sort().join(",");
+      if (!teamSet.has(teamKey)) {
+        teamSet.add(teamKey);
+        cvSet.add(pairKey);
+        savedTeams.push({ c, vc, team });
+      }
+    }
+
+    if (!savedTeams.length) {
+      output.innerHTML = '<p style="color:red">No teams could be generated. Try a wider range.</p>';
+      return;
+    }
+
+    savedTeams.forEach((team, i) => {
+      output.innerHTML += `
+        <div class="team">
+          <strong>Team ${i + 1}</strong><br>
+          C: ${team.c} | VC: ${team.vc}<br>
+          Players: ${team.team.join(', ')}
+        </div>
+      `;
+    });
+  }
+
+  function downloadCSV() {
+    if (!savedTeams.length) return alert("Generate teams first.");
+    const csv = [["Team#", "Captain", "Vice-Captain", "Players"]];
+    savedTeams.forEach((t, i) => {
+      csv.push([`Team ${i+1}`, t.c, t.vc, t.team.join(" ")]);
+    });
+    const blob = new Blob([csv.map(r => r.join(",")).join("\n")], { type: "text/csv" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "dream11_teams.csv";
+    link.click();
+  }
+
+  function downloadPDF() {
+    if (!savedTeams.length) return alert("Generate teams first.");
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    let y = 10;
+
+    savedTeams.forEach((t, i) => {
+      doc.text(`Team ${i + 1}
