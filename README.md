@@ -12,6 +12,7 @@ Picks team combinations using a smart algorithm that considers basic logic or he
 ### 4. [Weighted Match Picker](https://jcoding09.github.io/tc/match_weighted_picker.html)
 Team combinations are selected based on assigned weights or probabilities, giving preference to certain players or parameters.
 
+### 5. [teamLR](https://jcoding09.github.io/tc/teamLR.html) 
 ---
 
 ## 📁 Project Structure (if applicable)
